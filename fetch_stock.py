@@ -26,20 +26,30 @@ def fetch_stock_information(
     if isinstance(prices.columns, pd.MultiIndex):
         prices = prices.xs(symbol, level="Ticker", axis=1)
 
-    kd = ta.stoch(
-        prices["High"],
-        prices["Low"],
-        prices["Close"],
-        k=9,
-        d=3,
-        smooth_k=3,
-    )
-    if kd is None:
-        raise ValueError(f"Unable to calculate stochastic values for {symbol}")
+    low_9 = prices["Low"].rolling(9).min()
+    high_9 = prices["High"].rolling(9).max()
+
+    rsv = (prices["Close"] - low_9) / (high_9 - low_9) * 100
+
+    k_values = []
+    d_values = []
+    k = 50.0
+    d = 50.0
+
+    for value in rsv:
+        if pd.isna(value):
+            k_values.append(float("nan"))
+            d_values.append(float("nan"))
+            continue
+
+        k = k * 2 / 3 + value / 3
+        d = d * 2 / 3 + k / 3
+        k_values.append(k)
+        d_values.append(d)
 
     return StockInformation(
         symbol=symbol,
         prices=prices,
-        current_k=float(kd["STOCHk_9_3_3"].iloc[-1]),
-        current_d=float(kd["STOCHd_9_3_3"].iloc[-1]),
+        current_k=float(k_values[-1]),
+        current_d=float(d_values[-1]),
     )
