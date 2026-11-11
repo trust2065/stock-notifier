@@ -2,9 +2,6 @@ name: Stock notifier
 
 on:
   workflow_dispatch:
-  schedule:
-    # 01:00 UTC is 09:00 in Taiwan (UTC+8).
-    - cron: "1 1 * * 1-5"
 
 jobs:
   notify:
